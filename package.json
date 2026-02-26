@@ -1,0 +1,9 @@
+{
+  "name": "biomentor",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "preview": "python3 -m http.server 8000",
+    "preview:bind": "python3 -m http.server 8000 --bind 0.0.0.0"
+  }
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BioMentor | Learn Biology</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="nav">
+        <h1>BioMentor</h1>
+        <a href="#topics">Topics</a>
+        <a href="#flashcards">Flashcards</a>
+        <a href="#quiz">Quick Quiz</a>
+      </nav>
+      <div class="hero-content">
+        <p class="tag">Learning Biology Made Simple</p>
+        <h2>Build strong biology fundamentals step by step.</h2>
+        <p>
+          Explore core topics, practice with flashcards, and test yourself with a
+          short quiz.
+        </p>
+        <a class="cta" href="#topics">Start Learning</a>
+      </div>
+    </header>
+
+    <main>
+      <section id="topics" class="section">
+        <h3>Core Biology Topics</h3>
+        <div class="cards">
+          <article class="card">
+            <h4>Cell Biology</h4>
+            <p>
+              Understand organelles, membrane transport, and how cells produce
+              energy.
+            </p>
+          </article>
+          <article class="card">
+            <h4>Genetics</h4>
+            <p>
+              Learn DNA structure, inheritance patterns, and how traits are
+              expressed.
+            </p>
+          </article>
+          <article class="card">
+            <h4>Ecology</h4>
+            <p>
+              Discover ecosystems, food webs, and how organisms interact with the
+              environment.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="flashcards" class="section">
+        <h3>Flashcards</h3>
+        <p>Click a card to reveal the definition.</p>
+        <div class="flashcard-grid">
+          <button class="flashcard" data-answer="The basic unit of life.">Cell</button>
+          <button class="flashcard" data-answer="The molecule that stores genetic instructions.">DNA</button>
+          <button class="flashcard" data-answer="The process plants use to make food from sunlight.">Photosynthesis</button>
+        </div>
+      </section>
+
+      <section id="quiz" class="section quiz">
+        <h3>Quick Quiz</h3>
+        <p>Which organelle is known as the powerhouse of the cell?</p>
+        <div class="quiz-actions">
+          <button class="quiz-btn" data-correct="false">Nucleus</button>
+          <button class="quiz-btn" data-correct="true">Mitochondria</button>
+          <button class="quiz-btn" data-correct="false">Ribosome</button>
+        </div>
+        <p id="quiz-result" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2026 BioMentor · Keep learning biology every day.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
