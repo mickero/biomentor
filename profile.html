@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>biomentör — Profil</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="topbar"></header>
+
+  <main class="wrap">
+    <section class="hero" style="padding-top:34px;">
+      <h1 class="h1">Profil</h1>
+      <p class="lead">Hesap bilgilerini görüntüle ve düzenle.</p>
+    </section>
+
+    <section class="grid cols2">
+      <div class="card">
+        <h2 class="h2">Hesap bilgileri</h2>
+        <div class="kv" style="margin-top:12px;">
+          <div class="k">Ad Soyad</div>
+          <div class="v" id="pName">—</div>
+          <div class="k">E-posta</div>
+          <div class="v" id="pEmail">—</div>
+          <div class="k">Oluşturma</div>
+          <div class="v" id="pCreated">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="h2">Bilgileri düzenle</h2>
+        <form id="profileForm">
+          <input id="editName" placeholder="Ad Soyad" required />
+          <input id="editEmail" type="email" placeholder="E-posta" required />
+          <button class="btn primary" type="submit">Kaydet</button>
+          <p id="profileMsg" class="muted" style="margin:10px 0 0;"></p>
+        </form>
+
+        <hr style="border:none;border-top:1px solid rgba(11,27,20,.10);margin:14px 0;">
+
+        <h2 class="h2">Şifre değiştir</h2>
+        <form id="passwordForm">
+          <input id="curPassword" type="password" placeholder="Mevcut şifre" required />
+          <div class="row">
+            <input id="newPassword" type="password" placeholder="Yeni şifre (en az 6)" required minlength="6" />
+            <input id="newPassword2" type="password" placeholder="Yeni şifre tekrar" required minlength="6" />
+          </div>
+          <button class="btn" type="submit">Şifreyi güncelle</button>
+          <p id="pwMsg" class="muted" style="margin:10px 0 0;"></p>
+        </form>
+      </div>
+    </section>
+
+    <footer class="footer">© <span id="year"></span> <span data-brand></span></footer>
+  </main>
+
+  <script src="assets/site.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => requireAuth());
+  </script>
+</body>
+</html>

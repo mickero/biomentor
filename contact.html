@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>biomentör — İletişim</title>
+  <meta name="description" content="İletişim" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="topbar"></header>
+
+  <main class="wrap">
+    <section class="hero" style="padding-top:34px;">
+      <div class="badge">İletişim</div>
+      <h1 class="h1">Bize ulaş</h1>
+      <p class="lead">İletişim bilgileri tek dosyadan yönetilir.</p>
+    </section>
+
+    <section class="twoCol">
+      <div class="card">
+        <h2 class="h2">Bilgiler</h2>
+        <div class="kv" style="margin-top:12px;">
+          <div class="k">E-posta</div>
+          <a class="v" data-email-link><span data-email></span></a>
+
+          <div class="k">Telefon</div>
+          <a class="v" data-phone-link><span data-phone></span></a>
+
+          <div class="k">WhatsApp</div>
+          <a class="v" data-wa-link>Mesaj gönder</a>
+
+          <div class="k">Konum</div>
+          <div class="v"><span data-location></span></div>
+
+          <div class="k">Instagram</div>
+          <a class="v" data-ig-link>@<span data-ig-name></span></a>
+
+          <div class="k">YouTube</div>
+          <a class="v" data-yt-link>@<span data-yt-name></span></a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="h2">Mesaj</h2>
+        <p class="muted">Form, varsayılan e-posta uygulamasını açar.</p>
+        <form id="contactForm">
+          <div class="row">
+            <input id="name" placeholder="Ad Soyad" required />
+            <input id="email" type="email" placeholder="E-posta" required />
+          </div>
+          <input id="subject" placeholder="Konu" required />
+          <textarea id="message" placeholder="Mesaj" required></textarea>
+          <button class="btn primary" type="submit">Gönder</button>
+        </form>
+      </div>
+    </section>
+
+    <footer class="footer">
+      © <span id="year"></span> <span data-brand></span>
+    </footer>
+  </main>
+
+  <script src="assets/site.js"></script>
+</body>
+</html>

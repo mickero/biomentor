@@ -1,0 +1,1389 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>biomentör — Soru Yönetimi</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
+
+    /* ── TOKENS ── */
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --card:     #1c2128;
+      --border:   rgba(255,255,255,.08);
+      --border2:  rgba(255,255,255,.14);
+      --text:     #e6edf3;
+      --muted:    #7d8590;
+      --green:    #3fb950;
+      --green-bg: rgba(63,185,80,.12);
+      --blue:     #58a6ff;
+      --blue-bg:  rgba(88,166,255,.10);
+      --red:      #f85149;
+      --red-bg:   rgba(248,81,73,.10);
+      --yellow:   #d29922;
+      --radius:   12px;
+      --mono:     'DM Mono', monospace;
+      --display:  'Syne', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── LOCK SCREEN ── */
+    #lockScreen {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      flex-direction: column;
+      gap: 24px;
+    }
+    #lockScreen.hidden { display: none; }
+
+    .lockCard {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 40px;
+      width: 360px;
+      display: grid;
+      gap: 16px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .lockTitle {
+      font-family: var(--display);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .lockSub { color: var(--muted); font-size: 13px; }
+
+    /* ── LAYOUT ── */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+    #app.visible { display: flex; }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbarLeft { display: flex; align-items: center; gap: 14px; }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3fb950, #58a6ff);
+    }
+    .siteTitle {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: .4px;
+    }
+    .adminBadge {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(63,185,80,.25);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 0;
+      flex: 1;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+    }
+
+    .sideLabel {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 8px 10px 4px;
+    }
+
+    .courseBtn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 13px;
+      text-align: left;
+      transition: background .12s, border-color .12s;
+      width: 100%;
+    }
+    .courseBtn:hover   { background: rgba(255,255,255,.04); border-color: var(--border); }
+    .courseBtn.active  { background: var(--blue-bg); border-color: rgba(88,166,255,.3); color: var(--blue); }
+    .courseBtn .count  {
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .courseBtn.active .count { background: rgba(88,166,255,.15); color: var(--blue); }
+
+    .sideActions { margin-top: auto; padding-top: 16px; display: grid; gap: 8px; }
+
+    /* ── CONTENT AREA ── */
+    .content { padding: 28px; display: grid; gap: 24px; align-content: start; }
+
+    .pageHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .pageTitle {
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .pageSubtitle { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+    /* ── FORM CARD ── */
+    .formCard {
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 24px;
+      display: grid;
+      gap: 16px;
+    }
+    .formTitle {
+      font-family: var(--display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .formTitle span { color: var(--muted); font-family: var(--mono); font-size: 12px; font-weight: 400; }
+
+    .fieldGroup { display: grid; gap: 6px; }
+    .fieldLabel {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: .3px;
+    }
+
+    input[type=text], input[type=password], textarea, select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input[type=text]:focus,
+    input[type=password]:focus,
+    textarea:focus,
+    select:focus { border-color: var(--blue); }
+    textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+    select option { background: var(--card); }
+
+    .optionsGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .optRow {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+    .optLetter {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .radioGroup { display: flex; gap: 8px; flex-wrap: wrap; }
+    .radioOpt {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color .12s, background .12s;
+      font-size: 13px;
+    }
+    .radioOpt:has(input:checked) {
+      border-color: rgba(63,185,80,.4);
+      background: var(--green-bg);
+      color: var(--green);
+    }
+    .radioOpt input { display: none; }
+
+    .formActions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 9px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: background .12s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: rgba(255,255,255,.09); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn.primary {
+      background: var(--green-bg);
+      border-color: rgba(63,185,80,.35);
+      color: var(--green);
+    }
+    .btn.primary:hover { background: rgba(63,185,80,.18); }
+
+    .btn.danger {
+      background: var(--red-bg);
+      border-color: rgba(248,81,73,.3);
+      color: var(--red);
+    }
+    .btn.danger:hover { background: rgba(248,81,73,.18); }
+
+    .btn.blue {
+      background: var(--blue-bg);
+      border-color: rgba(88,166,255,.3);
+      color: var(--blue);
+    }
+    .btn.blue:hover { background: rgba(88,166,255,.17); }
+
+    .btn.sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ── QUESTION LIST ── */
+    .qList { display: grid; gap: 12px; }
+
+    .qCard {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: grid;
+      gap: 10px;
+      transition: border-color .15s;
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity:0; transform: translateY(6px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .qCard:hover { border-color: var(--border2); }
+
+    .qCardTop {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .qNum {
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(255,255,255,.05);
+      border-radius: 6px;
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .qText { font-size: 14px; font-weight: 500; line-height: 1.5; flex: 1; }
+    .qActions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .qOpts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .qOpt {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .qOpt.correct {
+      border-color: rgba(63,185,80,.35);
+      background: var(--green-bg);
+      color: var(--green);
+    }
+    .qOptLetter {
+      font-weight: 600;
+      width: 16px;
+      flex-shrink: 0;
+      color: var(--muted);
+    }
+    .qOpt.correct .qOptLetter { color: var(--green); }
+
+    .qExp {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px 12px;
+      background: rgba(255,255,255,.02);
+      border-left: 2px solid rgba(255,255,255,.1);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .emptyState {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      border: 1px dashed var(--border2);
+      border-radius: 14px;
+      display: grid;
+      gap: 8px;
+    }
+    .emptyIcon { font-size: 32px; }
+    .emptyText { font-size: 14px; }
+
+    /* ── STATS BAR ── */
+    .statsBar {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .statNum {
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+    .statLabel { color: var(--muted); font-size: 12px; }
+
+    /* ── EXPORT MODAL ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(4px);
+    }
+    .overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 18px;
+      padding: 28px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.6);
+    }
+    .modalHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modalTitle {
+      font-family: var(--display);
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .codeBox {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #a5d6ff;
+      overflow-y: auto;
+      flex: 1;
+      white-space: pre;
+      line-height: 1.7;
+    }
+    .modalActions { display: flex; gap: 10px; }
+
+    /* ── IMPORT ZONE ── */
+    .dropZone {
+      border: 2px dashed var(--border2);
+      border-radius: 14px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      display: grid;
+      gap: 8px;
+    }
+    .dropZone:hover, .dropZone.dragover {
+      border-color: rgba(88,166,255,.4);
+      background: var(--blue-bg);
+    }
+    .dropIcon { font-size: 28px; }
+    .dropText { color: var(--muted); font-size: 13px; }
+    .dropHint { font-size: 11px; color: rgba(125,133,144,.6); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.ok  { border-color: rgba(63,185,80,.4); color: var(--green); }
+    #toast.err { border-color: rgba(248,81,73,.4);  color: var(--red); }
+
+    /* ── EDIT INLINE ── */
+    .qCard.editing { border-color: rgba(88,166,255,.4); background: rgba(88,166,255,.04); }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 99px; }
+
+    @media (max-width: 800px) {
+      .main { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; overflow: visible; padding: 12px; }
+      .sideLabel { display: none; }
+      .sideActions { margin-top: 0; padding-top: 0; flex-direction: row; flex-wrap: wrap; }
+      .qOpts { grid-template-columns: 1fr; }
+      .optionsGrid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOCK SCREEN ══════════════════════════════════════════ -->
+<div id="lockScreen">
+  <div class="lockCard">
+    <div>
+      <div class="lockTitle">🔒 Admin Paneli</div>
+      <div class="lockSub" style="margin-top:6px;">Devam etmek için şifreyi gir</div>
+    </div>
+    <div class="fieldGroup">
+      <label class="fieldLabel">Şifre</label>
+      <input type="password" id="lockInput" placeholder="••••••••" />
+    </div>
+    <div id="lockErr" style="color:#f85149;font-size:12px;display:none;">Şifre hatalı.</div>
+    <button class="btn primary" id="lockBtn">Giriş →</button>
+    <div style="font-size:11px;color:#7d8590;">
+      Varsayılan şifre: <code style="color:#58a6ff;">admin123</code><br>
+      Değiştirmek için bu dosyanın en altındaki <code style="color:#58a6ff;">ADMIN_PASS</code> sabitini düzenle.
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbarLeft">
+      <div class="dot"></div>
+      <span class="siteTitle">BİOMENTOR</span>
+      <span class="adminBadge">Admin</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a class="btn sm" href="index.html">← Siteye dön</a>
+      <button class="btn sm" id="importBtn">⬆ İçe aktar</button>
+      <button class="btn sm blue" id="exportAllBtn">⬇ Tümünü dışa aktar</button>
+      <button class="btn sm" id="logoutBtn">Çıkış</button>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sideLabel">Kurslar</div>
+      <div id="courseList"></div>
+      <div class="sideActions">
+        <button class="btn sm primary" id="addCourseBtn" style="width:100%;">+ Yeni kurs ekle</button>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <!-- Stats -->
+      <div class="statsBar" id="statsBar"></div>
+
+      <!-- Add Question Form -->
+      <div class="formCard" id="addFormCard">
+        <div class="formTitle">
+          Soru Ekle
+          <span id="addFormCourseLabel">— kurs seçilmedi</span>
+        </div>
+
+        <div class="fieldGroup">
+          <label class="fieldLabel">Soru metni</label>
+          <textarea id="newQ" placeholder="Soruyu buraya yaz…"></textarea>
+        </div>
+
+        <div class="fieldGroup">
+          <label class="fieldLabel">Seçenekler (en az 2, en fazla 4)</label>
+          <div class="optionsGrid" id="optsContainer">
+            <!-- generated -->
+          </div>
+          <button class="btn sm" id="addOptBtn" style="margin-top:6px;width:fit-content;">+ Seçenek ekle</button>
+        </div>
+
+        <div class="fieldGroup">
+          <label class="fieldLabel">Doğru cevap</label>
+          <div class="radioGroup" id="correctRadio">
+            <!-- generated -->
+          </div>
+        </div>
+
+        <div class="fieldGroup">
+          <label class="fieldLabel">Açıklama <span style="color:rgba(125,133,144,.6);">(isteğe bağlı — yanlış cevapta gösterilir)</span></label>
+          <textarea id="newExp" placeholder="Bu soru hakkında kısa bir açıklama…" style="min-height:52px;"></textarea>
+        </div>
+
+        <div class="formActions">
+          <button class="btn primary" id="saveQBtn">✓ Soruyu kaydet</button>
+          <button class="btn" id="clearFormBtn">Temizle</button>
+          <span id="formMsg" style="font-size:12px;"></span>
+        </div>
+      </div>
+
+      <!-- Question List -->
+      <div>
+        <div class="pageHeader" style="margin-bottom:14px;">
+          <div>
+            <div class="pageTitle" id="listTitle">Sorular</div>
+            <div class="pageSubtitle" id="listSub">Soldaki kurslardan birini seç</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn sm blue" id="exportCourseBtn">⬇ Bu kursu dışa aktar</button>
+          </div>
+        </div>
+        <div id="qList" class="qList"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══ COURSE EDIT MODAL ═══════════════════════════════════ -->
+<div class="overlay hidden" id="courseEditOverlay">
+  <div class="modal" style="max-width:560px;">
+    <div class="modalHeader">
+      <div class="modalTitle">Kursu Düzenle</div>
+      <button class="btn sm" id="closeCourseEditBtn">✕ Kapat</button>
+    </div>
+
+    <div style="display:grid;gap:14px;overflow-y:auto;">
+      <div class="fieldGroup">
+        <label class="fieldLabel">Kurs adı *</label>
+        <input type="text" id="ceTitle" placeholder="Hücre ve Organeller" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="fieldGroup">
+          <label class="fieldLabel">Seviye</label>
+          <select id="ceLevel">
+            <option value="">— seç —</option>
+            <option value="Başlangıç">Başlangıç</option>
+            <option value="Orta">Orta</option>
+            <option value="İleri">İleri</option>
+          </select>
+        </div>
+        <div class="fieldGroup">
+          <label class="fieldLabel">Süre</label>
+          <input type="text" id="ceDuration" placeholder="3 saat" />
+        </div>
+      </div>
+      <div class="fieldGroup">
+        <label class="fieldLabel">Etiketler <span style="color:rgba(125,133,144,.6);">(virgülle ayır)</span></label>
+        <input type="text" id="ceTags" placeholder="9. Sınıf, Temel" />
+      </div>
+      <div class="fieldGroup">
+        <label class="fieldLabel">Kısa açıklama</label>
+        <textarea id="ceSummary" placeholder="Kurs hakkında kısa bir açıklama…" style="min-height:64px;"></textarea>
+      </div>
+      <div class="fieldGroup">
+        <label class="fieldLabel">Dersler <span style="color:rgba(125,133,144,.6);">(her satır bir ders)</span></label>
+        <textarea id="ceLessons" placeholder="Hücre teorisi ve temel kavramlar&#10;Zar yapısı ve madde taşınması&#10;Organeller ve işlevleri" style="min-height:100px;"></textarea>
+      </div>
+    </div>
+
+    <div class="modalActions">
+      <button class="btn primary" id="saveCourseEditBtn">✓ Kaydet</button>
+      <button class="btn sm" id="closeCourseEditBtn2">İptal</button>
+      <span id="ceMsg" style="font-size:12px;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPORT MODAL ════════════════════════════════════════ -->
+<div class="overlay hidden" id="exportOverlay">
+  <div class="modal">
+    <div class="modalHeader">
+      <div class="modalTitle" id="exportModalTitle">Dışa Aktar</div>
+      <button class="btn sm" id="closeExportBtn">✕ Kapat</button>
+    </div>
+    <div style="font-size:12px;color:#7d8590;line-height:1.6;">
+      Aşağıdaki kodu kopyala ve <code style="color:#58a6ff;">site.js</code> dosyasındaki
+      ilgili kursun <code style="color:#58a6ff;">quiz: [...]</code> bölümüyle değiştir.
+      "Tümünü aktar" seçeneği tüm kurslara ait tam <code style="color:#58a6ff;">COURSES</code> dizisini verir.
+    </div>
+    <pre class="codeBox" id="exportCode"></pre>
+    <div class="modalActions">
+      <button class="btn primary" id="copyCodeBtn">📋 Kopyala</button>
+      <button class="btn" id="downloadJsonBtn">⬇ JSON olarak indir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ IMPORT MODAL ════════════════════════════════════════ -->
+<div class="overlay hidden" id="importOverlay">
+  <div class="modal">
+    <div class="modalHeader">
+      <div class="modalTitle">JSON'dan İçe Aktar</div>
+      <button class="btn sm" id="closeImportBtn">✕ Kapat</button>
+    </div>
+    <div style="font-size:12px;color:#7d8590;line-height:1.6;">
+      Daha önce bu panelden dışa aktardığın bir JSON dosyasını yükle.
+      Mevcut sorular <strong style="color:#e6edf3;">silinmez</strong> — yeni sorular eklenir (tekrar edenler atlanır).
+    </div>
+    <div class="dropZone" id="dropZone">
+      <div class="dropIcon">📂</div>
+      <div class="dropText">JSON dosyasını buraya sürükle veya tıkla</div>
+      <div class="dropHint">Yalnızca bu panelden üretilen .json dosyaları</div>
+      <input type="file" id="fileInput" accept=".json" style="display:none;" />
+    </div>
+    <div id="importResult" style="font-size:13px;display:none;padding:10px 14px;border-radius:10px;"></div>
+    <div class="modalActions">
+      <button class="btn primary" id="confirmImportBtn" style="display:none;">✓ İçe aktar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ════════════════════════════════════════════════ -->
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   CONFIG — change password here
+   ════════════════════════════════════════════════════════════ */
+const ADMIN_PASS = "admin123";   // ← buradan değiştir
+
+/* ════════════════════════════════════════════════════════════
+   STORAGE KEYS
+   ════════════════════════════════════════════════════════════ */
+const STORE_KEY = "biomentor_admin_questions_v1";
+const COURSES_KEY = "biomentor_admin_courses_v1";
+
+/* ════════════════════════════════════════════════════════════
+   DEFAULT COURSE LIST (synced with site.js)
+   Users can add more from the admin panel
+   ════════════════════════════════════════════════════════════ */
+const DEFAULT_COURSES = [
+  { id: "hucre",   title: "Hücre ve Organeller" },
+  { id: "genetik", title: "Genetik: DNA, RNA, Protein" },
+  { id: "ekoloji", title: "Ekoloji ve Ekosistem" },
+];
+
+/* ════════════════════════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════════════════════════ */
+let courses = [];
+let questions = {};   // { courseId: [ {id, q, opts, ans, exp, author, createdAt} ] }
+let activeCourse = null;
+let pendingImport = null;
+
+/* ════════════════════════════════════════════════════════════
+   PERSISTENCE
+   ════════════════════════════════════════════════════════════ */
+function loadData() {
+  try { questions = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch { questions = {}; }
+  try { courses   = JSON.parse(localStorage.getItem(COURSES_KEY)); } catch { courses = null; }
+  if (!courses || !Array.isArray(courses)) courses = [...DEFAULT_COURSES];
+  // ensure every course has a questions array
+  courses.forEach(c => { if (!questions[c.id]) questions[c.id] = []; });
+}
+
+function saveData() {
+  localStorage.setItem(STORE_KEY,    JSON.stringify(questions));
+  localStorage.setItem(COURSES_KEY,  JSON.stringify(courses));
+}
+
+/* ════════════════════════════════════════════════════════════
+   LOCK
+   ════════════════════════════════════════════════════════════ */
+function checkLock() {
+  const unlocked = sessionStorage.getItem("biomentor_admin_unlocked") === "1";
+  if (unlocked) {
+    document.getElementById("lockScreen").classList.add("hidden");
+    document.getElementById("app").classList.add("visible");
+    init();
+  }
+}
+
+document.getElementById("lockBtn").addEventListener("click", tryUnlock);
+document.getElementById("lockInput").addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+
+function tryUnlock() {
+  const val = document.getElementById("lockInput").value;
+  if (val === ADMIN_PASS) {
+    sessionStorage.setItem("biomentor_admin_unlocked", "1");
+    document.getElementById("lockScreen").classList.add("hidden");
+    document.getElementById("app").classList.add("visible");
+    init();
+  } else {
+    const err = document.getElementById("lockErr");
+    err.style.display = "block";
+    document.getElementById("lockInput").value = "";
+    document.getElementById("lockInput").focus();
+    setTimeout(() => err.style.display = "none", 2500);
+  }
+}
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  sessionStorage.removeItem("biomentor_admin_unlocked");
+  location.reload();
+});
+
+/* ════════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════════ */
+function init() {
+  loadData();
+  renderSidebar();
+  renderStats();
+  renderQuestions();
+  buildOptionFields(2);
+  if (courses.length > 0) selectCourse(courses[0].id);
+}
+
+/* ════════════════════════════════════════════════════════════
+   SIDEBAR
+   ════════════════════════════════════════════════════════════ */
+function renderSidebar() {
+  const list = document.getElementById("courseList");
+  list.innerHTML = courses.map(c => `
+    <div style="display:flex;align-items:center;gap:4px;">
+      <button class="courseBtn ${activeCourse === c.id ? 'active' : ''}"
+              style="flex:1;" data-id="${c.id}" onclick="selectCourse('${c.id}')">
+        <span>${c.title}</span>
+        <span class="count">${(questions[c.id] || []).length}</span>
+      </button>
+      <button class="btn sm" style="padding:5px 8px;flex-shrink:0;"
+              onclick="editCourse('${c.id}')" title="Kursu düzenle">✏</button>
+      <button class="btn sm danger" style="padding:5px 8px;flex-shrink:0;"
+              onclick="deleteCourse('${c.id}')" title="Kursu sil">✕</button>
+    </div>
+  `).join("");
+}
+
+function editCourse(id) {
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+
+  document.getElementById("ceTitle").value    = c.title    || "";
+  document.getElementById("ceLevel").value    = c.level    || "";
+  document.getElementById("ceDuration").value = c.duration || "";
+  document.getElementById("ceTags").value     = (c.tags    || []).join(", ");
+  document.getElementById("ceSummary").value  = c.summary  || "";
+  document.getElementById("ceLessons").value  = (c.lessons || []).join("\n");
+  document.getElementById("ceMsg").textContent = "";
+
+  document.getElementById("saveCourseEditBtn").onclick = () => saveCourseEdit(id);
+  document.getElementById("courseEditOverlay").classList.remove("hidden");
+}
+
+function saveCourseEdit(id) {
+  const title = document.getElementById("ceTitle").value.trim();
+  const msg   = document.getElementById("ceMsg");
+  if (!title) { msg.style.color="var(--red)"; msg.textContent="Kurs adı boş olamaz."; return; }
+
+  const idx = courses.findIndex(x => x.id === id);
+  if (idx < 0) return;
+
+  courses[idx] = {
+    ...courses[idx],
+    title,
+    level:    document.getElementById("ceLevel").value.trim(),
+    duration: document.getElementById("ceDuration").value.trim(),
+    tags:     document.getElementById("ceTags").value.split(",").map(t => t.trim()).filter(Boolean),
+    summary:  document.getElementById("ceSummary").value.trim(),
+    lessons:  document.getElementById("ceLessons").value.split("\n").map(l => l.trim()).filter(Boolean),
+  };
+
+  saveData();
+  renderSidebar();
+  if (activeCourse === id) selectCourse(id);
+  document.getElementById("courseEditOverlay").classList.add("hidden");
+  toast("Kurs güncellendi.", "ok");
+}
+
+// Close handlers for course edit modal
+document.getElementById("closeCourseEditBtn").addEventListener("click",  () => document.getElementById("courseEditOverlay").classList.add("hidden"));
+document.getElementById("closeCourseEditBtn2").addEventListener("click", () => document.getElementById("courseEditOverlay").classList.add("hidden"));
+
+function deleteCourse(id) {
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+  const qCount = (questions[id] || []).length;
+  const msg = qCount > 0
+    ? `"${c.title}" kursunu ve içindeki ${qCount} soruyu silmek istediğine emin misin?`
+    : `"${c.title}" kursunu silmek istediğine emin misin?`;
+  if (!confirm(msg)) return;
+  courses = courses.filter(x => x.id !== id);
+  delete questions[id];
+  saveData();
+  if (activeCourse === id) activeCourse = courses[0]?.id || null;
+  renderSidebar();
+  renderStats();
+  renderQuestions();
+  if (activeCourse) selectCourse(activeCourse);
+  toast(`"${c.title}" silindi.`, "ok");
+}
+
+function selectCourse(id) {
+  activeCourse = id;
+  renderSidebar();
+  renderStats();
+  renderQuestions();
+  const c = courses.find(x => x.id === id);
+  document.getElementById("addFormCourseLabel").textContent = c ? `— ${c.title}` : "";
+  document.getElementById("listTitle").textContent = c ? c.title : "Sorular";
+  document.getElementById("listSub").textContent =
+    `${(questions[id] || []).length} soru · ID: ${id}`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ADD COURSE
+   ════════════════════════════════════════════════════════════ */
+document.getElementById("addCourseBtn").addEventListener("click", () => {
+  const title = prompt("Kurs adı:");
+  if (!title || !title.trim()) return;
+  const id = title.trim().toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 32);
+  if (courses.find(c => c.id === id)) { toast("Bu ID zaten var.", "err"); return; }
+  courses.push({ id, title: title.trim() });
+  questions[id] = [];
+  saveData();
+  renderSidebar();
+  selectCourse(id);
+  toast(`"${title.trim()}" kursu eklendi.`, "ok");
+});
+
+/* ════════════════════════════════════════════════════════════
+   STATS
+   ════════════════════════════════════════════════════════════ */
+function renderStats() {
+  const total = Object.values(questions).reduce((s, a) => s + a.length, 0);
+  const activeCnt = activeCourse ? (questions[activeCourse] || []).length : 0;
+  document.getElementById("statsBar").innerHTML = `
+    <div class="stat">
+      <div>
+        <div class="statNum">${total}</div>
+        <div class="statLabel">Toplam soru</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div>
+        <div class="statNum">${courses.length}</div>
+        <div class="statLabel">Kurs</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div>
+        <div class="statNum" style="color:var(--green);">${activeCnt}</div>
+        <div class="statLabel">Aktif kursta</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ════════════════════════════════════════════════════════════
+   OPTION FIELDS
+   ════════════════════════════════════════════════════════════ */
+const LETTERS = ["A","B","C","D"];
+
+function buildOptionFields(count, values = []) {
+  const container = document.getElementById("optsContainer");
+  const radio     = document.getElementById("correctRadio");
+  container.innerHTML = "";
+  radio.innerHTML     = "";
+
+  for (let i = 0; i < count; i++) {
+    container.innerHTML += `
+      <div class="optRow">
+        <div class="optLetter">${LETTERS[i]}</div>
+        <input type="text" id="opt${i}" placeholder="Seçenek ${LETTERS[i]}"
+               value="${(values[i] || "").replace(/"/g,'&quot;')}" />
+      </div>`;
+    radio.innerHTML += `
+      <label class="radioOpt">
+        <input type="radio" name="correctAns" value="${i}" ${i === 0 && values.length === 0 ? "checked" : ""} />
+        ${LETTERS[i]}
+      </label>`;
+  }
+
+  document.getElementById("addOptBtn").style.display = count >= 4 ? "none" : "block";
+}
+
+let optCount = 2;
+document.getElementById("addOptBtn").addEventListener("click", () => {
+  if (optCount < 4) { optCount++; buildOptionFields(optCount); }
+});
+
+/* ════════════════════════════════════════════════════════════
+   SAVE QUESTION
+   ════════════════════════════════════════════════════════════ */
+document.getElementById("saveQBtn").addEventListener("click", () => saveQuestion(null));
+document.getElementById("clearFormBtn").addEventListener("click", () => {
+  document.getElementById("newQ").value = "";
+  document.getElementById("newExp").value = "";
+  optCount = 2;
+  buildOptionFields(2);
+  document.getElementById("formMsg").textContent = "";
+});
+
+function saveQuestion(editId = null) {
+  const msg = document.getElementById("formMsg");
+
+  if (!activeCourse) {
+    msg.style.color = "var(--red)";
+    msg.textContent = "Önce bir kurs seç.";
+    return;
+  }
+
+  const qText = document.getElementById("newQ").value.trim();
+  if (!qText) { msg.style.color="var(--red)"; msg.textContent="Soru boş olamaz."; return; }
+
+  const opts = [];
+  for (let i = 0; i < optCount; i++) {
+    const v = document.getElementById(`opt${i}`).value.trim();
+    if (!v) { msg.style.color="var(--red)"; msg.textContent=`Seçenek ${LETTERS[i]} boş olamaz.`; return; }
+    opts.push(v);
+  }
+
+  const checked = document.querySelector('input[name="correctAns"]:checked');
+  if (!checked) { msg.style.color="var(--red)"; msg.textContent="Doğru cevabı seç."; return; }
+  const ans = parseInt(checked.value);
+
+  const exp = document.getElementById("newExp").value.trim();
+
+  const entry = {
+    id:        editId || ("q_" + Date.now().toString(16) + Math.random().toString(16).slice(2,6)),
+    q:         qText,
+    opts,
+    ans,
+    exp,
+    createdAt: editId ? (questions[activeCourse].find(x=>x.id===editId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    author:    "admin"
+  };
+
+  if (editId) {
+    const idx = questions[activeCourse].findIndex(x => x.id === editId);
+    if (idx >= 0) questions[activeCourse][idx] = entry;
+  } else {
+    questions[activeCourse].push(entry);
+  }
+
+  saveData();
+  renderQuestions();
+  renderSidebar();
+  renderStats();
+
+  // reset form
+  document.getElementById("newQ").value = "";
+  document.getElementById("newExp").value = "";
+  optCount = 2;
+  buildOptionFields(2);
+  msg.style.color = "var(--green)";
+  msg.textContent = editId ? "Soru güncellendi ✓" : "Soru eklendi ✓";
+  setTimeout(() => msg.textContent = "", 2500);
+  toast(editId ? "Soru güncellendi." : "Soru kaydedildi.", "ok");
+}
+
+/* ════════════════════════════════════════════════════════════
+   RENDER QUESTIONS
+   ════════════════════════════════════════════════════════════ */
+function renderQuestions() {
+  const list = document.getElementById("qList");
+  const qs   = activeCourse ? (questions[activeCourse] || []) : [];
+
+  if (qs.length === 0) {
+    list.innerHTML = `
+      <div class="emptyState">
+        <div class="emptyIcon">📝</div>
+        <div class="emptyText">${activeCourse ? "Bu kursa henüz soru eklenmedi." : "Soldaki listeden bir kurs seç."}</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = qs.map((item, i) => `
+    <div class="qCard" id="qcard-${item.id}">
+      <div class="qCardTop">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+          <span class="qNum">#${i+1}</span>
+          <span class="qText">${escHtml(item.q)}</span>
+        </div>
+        <div class="qActions">
+          <button class="btn sm" onclick="startEdit('${item.id}')">✏ Düzenle</button>
+          <button class="btn sm danger" onclick="deleteQ('${item.id}')">✕</button>
+        </div>
+      </div>
+      <div class="qOpts">
+        ${item.opts.map((opt, oi) => `
+          <div class="qOpt ${oi === item.ans ? 'correct' : ''}">
+            <span class="qOptLetter">${LETTERS[oi]}</span>
+            <span>${escHtml(opt)}</span>
+          </div>`).join("")}
+      </div>
+      ${item.exp ? `<div class="qExp">💡 ${escHtml(item.exp)}</div>` : ""}
+      <div style="font-size:11px;color:var(--muted);">
+        ${new Date(item.createdAt).toLocaleString("tr-TR")}
+        ${item.updatedAt !== item.createdAt ? ` · güncellendi ${new Date(item.updatedAt).toLocaleString("tr-TR")}` : ""}
+        · ${item.author || "admin"}
+      </div>
+    </div>
+  `).join("");
+}
+
+function escHtml(s) {
+  return String(s || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+/* ════════════════════════════════════════════════════════════
+   DELETE
+   ════════════════════════════════════════════════════════════ */
+function deleteQ(id) {
+  if (!confirm("Bu soruyu silmek istediğine emin misin?")) return;
+  questions[activeCourse] = questions[activeCourse].filter(x => x.id !== id);
+  saveData();
+  renderQuestions();
+  renderSidebar();
+  renderStats();
+  toast("Soru silindi.", "ok");
+}
+
+/* ════════════════════════════════════════════════════════════
+   EDIT — loads question into form
+   ════════════════════════════════════════════════════════════ */
+function startEdit(id) {
+  const item = questions[activeCourse].find(x => x.id === id);
+  if (!item) return;
+
+  // scroll to form
+  document.getElementById("addFormCard").scrollIntoView({ behavior:"smooth", block:"start" });
+
+  document.getElementById("newQ").value   = item.q;
+  document.getElementById("newExp").value = item.exp || "";
+  optCount = item.opts.length;
+  buildOptionFields(optCount, item.opts);
+
+  // set correct radio after a tick (DOM needs to update)
+  setTimeout(() => {
+    const radios = document.querySelectorAll('input[name="correctAns"]');
+    if (radios[item.ans]) radios[item.ans].checked = true;
+  }, 0);
+
+  // replace save button behaviour temporarily
+  const saveBtn = document.getElementById("saveQBtn");
+  saveBtn.textContent = "✓ Güncelle";
+  saveBtn.onclick = () => {
+    saveQuestion(id);
+    saveBtn.textContent = "✓ Soruyu kaydet";
+    saveBtn.onclick = () => saveQuestion(null);
+  };
+
+  // highlight card
+  document.querySelectorAll(".qCard").forEach(c => c.classList.remove("editing"));
+  const card = document.getElementById(`qcard-${id}`);
+  if (card) card.classList.add("editing");
+}
+
+/* ════════════════════════════════════════════════════════════
+   EXPORT
+   ════════════════════════════════════════════════════════════ */
+function buildExportPayload(courseId) {
+  if (courseId) {
+    const c  = courses.find(x => x.id === courseId);
+    const qs = questions[courseId] || [];
+    return {
+      exportedAt: new Date().toISOString(),
+      type: "single_course",
+      courseId,
+      courseTitle: c?.title || courseId,
+      questions: qs
+    };
+  }
+  return {
+    exportedAt: new Date().toISOString(),
+    type: "all_courses",
+    courses: courses.map(c => ({
+      ...c,
+      questions: questions[c.id] || []
+    }))
+  };
+}
+
+function buildSiteJsSnippet(courseId) {
+  if (courseId) {
+    const qs = questions[courseId] || [];
+    const arr = qs.map(item =>
+      `      {\n        q: ${JSON.stringify(item.q)},\n        opts: ${JSON.stringify(item.opts)},\n        ans: ${item.ans},\n        exp: ${JSON.stringify(item.exp || "")}\n      }`
+    ).join(",\n");
+    return `// Kurs ID: ${courseId}\n// ${qs.length} soru — ${new Date().toLocaleString("tr-TR")}\nquiz: [\n${arr}\n]`;
+  }
+
+  // full COURSES array snippet
+  const lines = courses.map(c => {
+    const qs = questions[c.id] || [];
+    const qArr = qs.map(item =>
+      `      {\n        q: ${JSON.stringify(item.q)},\n        opts: ${JSON.stringify(item.opts)},\n        ans: ${item.ans},\n        exp: ${JSON.stringify(item.exp || "")}\n      }`
+    ).join(",\n");
+    return `  {\n    id: ${JSON.stringify(c.id)},\n    title: ${JSON.stringify(c.title)},\n    // ... diğer alanlar (level, duration, tags, summary, lessons) değişmedi\n    quiz: [\n${qArr}\n    ]\n  }`;
+  }).join(",\n");
+  return `// Tüm kurslar — ${new Date().toLocaleString("tr-TR")}\n// COURSES dizisindeki quiz alanlarını bununla güncelle:\n[\n${lines}\n]`;
+}
+
+function openExportModal(courseId) {
+  const title = courseId
+    ? `Dışa Aktar — ${courses.find(x=>x.id===courseId)?.title || courseId}`
+    : "Tümünü Dışa Aktar";
+  document.getElementById("exportModalTitle").textContent = title;
+  document.getElementById("exportCode").textContent = buildSiteJsSnippet(courseId);
+  document.getElementById("exportOverlay").classList.remove("hidden");
+
+  document.getElementById("downloadJsonBtn").onclick = () => {
+    const payload = buildExportPayload(courseId);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
+    const a = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(blob),
+      download: `biomentor_${courseId || "all"}_${Date.now()}.json`
+    });
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("JSON indirildi.", "ok");
+  };
+}
+
+document.getElementById("exportCourseBtn").addEventListener("click", () => {
+  if (!activeCourse) { toast("Önce bir kurs seç.", "err"); return; }
+  openExportModal(activeCourse);
+});
+document.getElementById("exportAllBtn").addEventListener("click", () => openExportModal(null));
+document.getElementById("closeExportBtn").addEventListener("click", () => {
+  document.getElementById("exportOverlay").classList.add("hidden");
+});
+document.getElementById("copyCodeBtn").addEventListener("click", () => {
+  const code = document.getElementById("exportCode").textContent;
+  navigator.clipboard.writeText(code).then(() => toast("Kopyalandı ✓", "ok"));
+});
+
+/* ════════════════════════════════════════════════════════════
+   IMPORT
+   ════════════════════════════════════════════════════════════ */
+document.getElementById("importBtn").addEventListener("click", () => {
+  document.getElementById("importOverlay").classList.remove("hidden");
+});
+document.getElementById("closeImportBtn").addEventListener("click", () => {
+  document.getElementById("importOverlay").classList.add("hidden");
+  pendingImport = null;
+  document.getElementById("importResult").style.display = "none";
+  document.getElementById("confirmImportBtn").style.display = "none";
+});
+
+const dropZone  = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+
+dropZone.addEventListener("click",      () => fileInput.click());
+dropZone.addEventListener("dragover",   e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+dropZone.addEventListener("dragleave",  () => dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+  const file = e.dataTransfer.files[0];
+  if (file) readImportFile(file);
+});
+fileInput.addEventListener("change", () => {
+  if (fileInput.files[0]) readImportFile(fileInput.files[0]);
+});
+
+function readImportFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      pendingImport = data;
+      previewImport(data);
+    } catch {
+      showImportResult("Geçersiz JSON dosyası.", false);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function previewImport(data) {
+  let msg = "";
+  if (data.type === "single_course") {
+    msg = `Kurs: <strong>${data.courseTitle || data.courseId}</strong> · ${data.questions.length} soru bulundu.`;
+  } else if (data.type === "all_courses") {
+    const total = data.courses.reduce((s,c) => s + (c.questions||[]).length, 0);
+    msg = `${data.courses.length} kurs, toplam <strong>${total}</strong> soru bulundu.`;
+  } else {
+    msg = "Bilinmeyen format.";
+    pendingImport = null;
+  }
+  showImportResult(msg, !!pendingImport);
+}
+
+function showImportResult(msg, ok) {
+  const el = document.getElementById("importResult");
+  el.style.display = "block";
+  el.style.background = ok ? "var(--green-bg)" : "var(--red-bg)";
+  el.style.border = `1px solid ${ok ? "rgba(63,185,80,.3)" : "rgba(248,81,73,.3)"}`;
+  el.style.color  = ok ? "var(--green)" : "var(--red)";
+  el.innerHTML = msg;
+  document.getElementById("confirmImportBtn").style.display = ok ? "inline-flex" : "none";
+}
+
+document.getElementById("confirmImportBtn").addEventListener("click", () => {
+  if (!pendingImport) return;
+  let added = 0, skipped = 0;
+
+  const mergeQuestions = (courseId, incomingQs) => {
+    if (!questions[courseId]) questions[courseId] = [];
+    const existingIds = new Set(questions[courseId].map(x => x.id));
+    incomingQs.forEach(q => {
+      if (existingIds.has(q.id)) { skipped++; return; }
+      questions[courseId].push({ ...q, author: q.author || "imported" });
+      added++;
+    });
+  };
+
+  if (pendingImport.type === "single_course") {
+    const c = pendingImport;
+    if (!courses.find(x => x.id === c.courseId)) {
+      courses.push({ id: c.courseId, title: c.courseTitle || c.courseId });
+    }
+    mergeQuestions(c.courseId, c.questions || []);
+  } else if (pendingImport.type === "all_courses") {
+    pendingImport.courses.forEach(c => {
+      if (!courses.find(x => x.id === c.id)) courses.push({ id: c.id, title: c.title });
+      mergeQuestions(c.id, c.questions || []);
+    });
+  }
+
+  saveData();
+  renderSidebar();
+  renderStats();
+  renderQuestions();
+  document.getElementById("importOverlay").classList.add("hidden");
+  pendingImport = null;
+  fileInput.value = "";
+  toast(`İçe aktarıldı: ${added} yeni, ${skipped} atlandı.`, "ok");
+});
+
+/* ════════════════════════════════════════════════════════════
+   TOAST
+   ════════════════════════════════════════════════════════════ */
+let toastTimer;
+function toast(msg, type = "ok") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = "", 2500);
+}
+
+/* ════════════════════════════════════════════════════════════
+   BOOT
+   ════════════════════════════════════════════════════════════ */
+checkLock();
+</script>
+</body>
+</html>

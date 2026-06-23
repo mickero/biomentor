@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>biomentör — Kayıt</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="topbar"></header>
+
+  <main class="wrap">
+    <section class="hero" style="padding-top:34px;">
+      <h1 class="h1">Kayıt</h1>
+      <p class="lead">Ücretsiz hesap oluştur.</p>
+    </section>
+
+    <section class="card">
+      <form id="registerForm">
+        <div class="row">
+          <input id="regName" placeholder="Ad Soyad" required />
+          <input id="regEmail" type="email" placeholder="E-posta" required />
+        </div>
+        <div class="row">
+          <input id="regPassword" type="password" placeholder="Şifre (en az 6 karakter)" required minlength="6" />
+          <input id="regPassword2" type="password" placeholder="Şifre tekrar" required minlength="6" />
+        </div>
+        <button class="btn primary" type="submit">Kayıt ol</button>
+        <p id="regMsg" class="muted" style="margin:10px 0 0;"></p>
+      </form>
+      <div class="miniRow" style="margin-top:10px;">
+        <a class="btn" href="login.html">Giriş yap</a>
+      </div>
+    </section>
+
+    <footer class="footer">© <span id="year"></span> <span data-brand></span></footer>
+  </main>
+
+  <script src="assets/site.js"></script>
+</body>
+</html>

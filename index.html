@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>biomentör — Biyoloji Öğren</title>
+  <meta name="description" content="biomentör ile ücretsiz olarak biyoloji öğrenmeye hemen başla" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="topbar"></header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1 class="h1">Biyolojiyi düzenli, anlaşılır ve hızlı öğren.</h1>
+      <p class="lead" data-bio></p>
+      <div class="actions">
+        <a class="btn primary" href="courses.html">Kurslara başla</a>
+        <a class="btn" href="about.html">Platformu incele</a>
+      </div>
+    </section>
+
+    <section>
+      <div class="sectionTitle">
+        <h2 class="h2">Öne çıkan kurslar</h2>
+        <a class="btn" href="courses.html">Tümünü gör</a>
+      </div>
+      <div id="coursesGrid" class="grid cols3"></div>
+    </section>
+
+    <footer class="footer">
+      © <span id="year"></span> <span data-brand></span>
+    </footer>
+  </main>
+
+  <script src="assets/site.js"></script>
+</body>
+</html>

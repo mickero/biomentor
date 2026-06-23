@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>biomentör — Kurs</title>
+  <meta name="description" content="Kurs detayı" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="topbar"></header>
+
+  <main class="wrap">
+    <div id="courseDetail"></div>
+
+    <footer class="footer">
+      © <span id="year"></span> <span data-brand></span>
+    </footer>
+  </main>
+
+  <script src="assets/site.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => requireAuth());
+  </script>
+</body>
+</html>
